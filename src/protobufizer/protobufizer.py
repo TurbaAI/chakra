@@ -33,13 +33,14 @@ def main() -> None:
         else open(args.input_filename, "r") as file_in,
         gzip.open(args.output_filename, "w")
         if args.output_filename.endswith(".gz")
-        else open(args.output_filename, "wb") as file_out
+        else open(args.output_filename, "wb") as file_out,
     ):
         trace_objects = orjson.loads(file_in.read())
         global_metadata = ParseDict(trace_objects[0], GlobalMetadata())
         encode_message(file_out, global_metadata)
         for sub_dict in tqdm(trace_objects[1:], desc="Saving chakra nodes", unit="node"):
             encode_message(file_out, ParseDict(sub_dict, ChakraNode()))
+
 
 if __name__ == "__main__":
     main()

@@ -4,15 +4,15 @@ import sys
 from typing import List
 
 import orjson
-from et_replay.execution_trace import Node as PyTorchOperator, ExecutionTrace
+from et_replay.execution_trace import ExecutionTrace
+from et_replay.execution_trace import Node as PyTorchOperator
 
 # Increase the recursion limit for deep Chakra host execution traces.
 sys.setrecursionlimit(10**6)
 
 
 def load_execution_trace_file(et_file_path: str) -> ExecutionTrace:
-    """Loads Execution Trace from json file and parses it."""
-
+    """Load Execution Trace from json file and parses it."""
     with gzip.open(et_file_path, "rb") if et_file_path.endswith("gz") else open(et_file_path, "r") as f:
         return ExecutionTrace(orjson.loads(f.read()))
 
@@ -36,7 +36,6 @@ class ChakraHostTraceLoader:
         root_node = chakra_host_trace.get_nodes()[1]  # Root node is usually 1-based
         chakra_host_ops = self.extract_chakra_host_ops(root_node)
         logging.debug(f"Extracted {len(chakra_host_ops)} operators from Chakra host execution trace.")
-        logging.info("Chakra host execution trace has been loaded and processed successfully.")
 
         return chakra_host_ops
 

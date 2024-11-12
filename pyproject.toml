@@ -34,11 +34,13 @@ Repository = "https://github.com/mlcommons/chakra.git"
 
 [project.scripts]
 chakra_converter = "chakra.src.converter.converter:main"
+chakra_converter_batch = "chakra.src.converter.batch_converter:main"
 chakra_generator = "chakra.src.generator.generator:main"
 chakra_jsonizer = "chakra.src.jsonizer.jsonizer:main"
 chakra_protobufizer = "chakra.src.protobufizer.protobufizer:main"
 chakra_timeline_visualizer = "chakra.src.timeline_visualizer.timeline_visualizer:main"
 chakra_trace_link = "chakra.src.trace_link.trace_link:main"
+chakra_trace_link_batch = "chakra.src.trace_link.batch_trace_link:main"
 chakra_visualizer = "chakra.src.visualizer.visualizer:main"
 
 [tool.ruff]
@@ -47,6 +49,7 @@ line-length = 120
 exclude = [
     "src/converter/text_converter.py",
     "src/third_party/utils/protolib.py",
+    "param",
 ]
 
 [tool.ruff.lint]

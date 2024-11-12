@@ -1,10 +1,9 @@
 import bisect
 import copy
 import gzip
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import orjson
 from et_replay.execution_trace import (
@@ -12,9 +11,8 @@ from et_replay.execution_trace import (
     EXECUTION_TRACE_THREAD_ANNOTATION,
 )
 from et_replay.execution_trace import Node as PyTorchOperator
-from tqdm import tqdm
-
 from et_replay.utils import read_dictionary_from_json_file
+
 from .chakra_device_trace_loader import ChakraDeviceTraceLoader
 from .chakra_host_trace_loader import ChakraHostTraceLoader
 from .kineto_operator import KinetoOperator
@@ -657,7 +655,7 @@ class TraceLinker:
 
         sorted_nodes = sorted(pytorch_et_data["nodes"], key=lambda x: x["id"])
         gpu_ops = []
-        for op in tqdm(sorted_nodes):
+        for op in sorted_nodes:
             gpu_ops += self.process_op_and_dependents(
                 op,
                 host_op_id_to_kineto_ops_map,
@@ -671,7 +669,7 @@ class TraceLinker:
         # Update parent-child relationships with new IDs
         logging.info("Updating parent-child relationships with new IDs.")
         sorted_nodes = sorted(pytorch_et_data["nodes"], key=lambda x: x["id"])
-        for op in tqdm(sorted_nodes):
+        for op in sorted_nodes:
             if "ctrl_deps" in op:
                 op["ctrl_deps"] = self.id_assigner.assign_or_retrieve_id(op["ctrl_deps"])
 

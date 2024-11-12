@@ -503,7 +503,7 @@ def test_process_dependent_gpu_ops(trace_linker, orig_op_id, cpu_op, kineto_gpu_
 
 
 @patch("builtins.open", new_callable=MagicMock)
-@patch("json.dump")
+@patch("orjson.dumps")
 def test_dump_chakra_execution_trace_plus(mock_json_dump, mock_open, trace_linker):
     trace_linker.pytorch_et_plus_data = {"nodes": [{"id": 1}, {"id": 2}]}
     trace_linker.dump_chakra_execution_trace_plus(trace_linker.pytorch_et_plus_data, "output.json")
@@ -511,6 +511,4 @@ def test_dump_chakra_execution_trace_plus(mock_json_dump, mock_open, trace_linke
     mock_open.assert_called_once_with("output.json", "w")
     mock_open.return_value.__enter__.assert_called_once()
     mock_open.return_value.__exit__.assert_called_once()
-    mock_json_dump.assert_called_once_with(
-        {"nodes": [{"id": 1}, {"id": 2}]}, mock_open.return_value.__enter__(), indent=4
-    )
+    mock_json_dump.assert_called_once_with({"nodes": [{"id": 1}, {"id": 2}]})

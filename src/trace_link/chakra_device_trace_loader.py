@@ -1,13 +1,14 @@
 import gzip
 import logging
 import sys
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
+
 import orjson
-from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 try:
-    from rusty_chakra import RSKinetoOperator, DurationCalculator
+    from rusty_chakra import DurationCalculator, RSKinetoOperator
+
     HAS_RUST_EXTENSION = True
 except ImportError:
     HAS_RUST_EXTENSION = False
@@ -16,11 +17,9 @@ from .kineto_operator import KinetoOperator
 
 
 def read_dictionary_from_json_file(et_file_path: str) -> Dict[str, Any]:
-    """Loads Execution Trace from json file."""
-
+    """Load Execution Trace from json file."""
     with gzip.open(et_file_path, "rb") if et_file_path.endswith("gz") else open(et_file_path, "r") as f:
         return orjson.loads(f.read())
-
 
 
 class ChakraDeviceTraceLoader:
@@ -118,7 +117,7 @@ class ChakraDeviceTraceLoader:
         kineto_id_arrow_op_map = {}
         kineto_id_cuda_launch_op_map = {}
 
-        for op in tqdm(kineto_ops):
+        for op in kineto_ops:
             if op.is_cpu_op():
                 kineto_cpu_ops.append(op)
                 kineto_tid_cpu_ops_map.setdefault(op.tid, []).append(op)
@@ -167,7 +166,6 @@ class ChakraDeviceTraceLoader:
                 thread_start_end[1] = max(thread_start_end[1], op.timestamp + op.inclusive_dur)
 
         kineto_rf_id_to_kineto_op_map = {op.rf_id: op for op in kineto_cpu_ops if op.rf_id is not None}
-        logging.info("Categorization successful.")
         return {
             "kineto_cpu_ops": kineto_cpu_ops,
             "kineto_tid_cpu_ops_map": kineto_tid_cpu_ops_map,
@@ -191,8 +189,8 @@ class ChakraDeviceTraceLoader:
         effectively representing the time spent exclusively in that operator.
 
         Args:
-            tid_op_index (tuple[int, int]): A dict index and list index into self.sorted_kineto_ops to find the operation
-                to compute the exclusive duration for.
+            tid_op_index (tuple[int, int]): A dict index and list index into self.sorted_kineto_ops to find the
+                operation to compute the exclusive duration for.
         """
         (tid, i) = tid_op_index
         op = self.sorted_kineto_ops[tid][i]
@@ -255,7 +253,6 @@ class ChakraDeviceTraceLoader:
             exclusive_durs = calculator.calculate_exclusive_dur_rs(kineto_ops=kineto_rs_operators)
             for kineto_op, excl_dur in zip(self.sorted_kineto_ops[tid], exclusive_durs):
                 kineto_op.exclusive_dur = excl_dur
-        logging.info("Exclusive durations for Kineto operators calculated successfully.")
 
     def calculate_exclusive_dur(self, kineto_tid_cpu_ops_map: Dict[int, List[KinetoOperator]]) -> None:
         """
@@ -281,7 +278,6 @@ class ChakraDeviceTraceLoader:
             )
             for kineto_op, excl_dur in zip(self.sorted_kineto_ops[tid], exclusive_durs):
                 kineto_op.exclusive_dur = excl_dur
-        logging.info("Exclusive durations for Kineto operators calculated successfully.")
 
     @staticmethod
     def merge_overlapping_intervals(intervals: List[Tuple[int, int]]) -> List[Tuple[int, int]]:

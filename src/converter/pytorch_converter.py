@@ -1,5 +1,4 @@
 import gzip
-import json
 import logging
 from typing import IO, Dict, List, Optional, Set, Tuple
 
@@ -16,7 +15,6 @@ from ...schema.protobuf.et_def_pb2 import (
     COMP_NODE,
     REDUCE_SCATTER,
     GlobalMetadata,
-    GATHER,
 )
 from ...schema.protobuf.et_def_pb2 import AttributeProto as ChakraAttr
 from ...schema.protobuf.et_def_pb2 import Node as ChakraNode
@@ -75,7 +73,9 @@ class PyTorchConverter:
             Dict: The loaded Chakra host + device execution trace data.
         """
         logging.debug(f"Loading Chakra host + device execution traces in JSON format from file: {input_filename}")
-        with (gzip.open(input_filename, "r") if input_filename.endswith(".gz") else open(input_filename, "r")) as json_file:
+        with (
+            gzip.open(input_filename, "r") if input_filename.endswith(".gz") else open(input_filename, "r")
+        ) as json_file:
             return orjson.loads(json_file.read())
 
     def parse_json_trace(self, json_trace: Dict) -> Tuple[Dict, Dict[int, PyTorchNode]]:
@@ -248,7 +248,11 @@ class PyTorchConverter:
                             [
                                 ChakraAttr(name="comm_type", int64_val=collective_comm_type),
                                 ChakraAttr(name="comm_size", int64_val=pytorch_gpu_node.comm_size),
-                                *( [ChakraAttr(name="pg_name", string_val=pytorch_gpu_node.pg_name)] if pytorch_gpu_node.pg_name != "" else [] ),
+                                *(
+                                    [ChakraAttr(name="pg_name", string_val=pytorch_gpu_node.pg_name)]
+                                    if pytorch_gpu_node.pg_name != ""
+                                    else []
+                                ),
                             ]
                         )
 
@@ -256,7 +260,11 @@ class PyTorchConverter:
                         chakra_gpu_node.attr.extend(
                             [
                                 ChakraAttr(name="comm_size", int64_val=pytorch_gpu_node.comm_size),
-                                *( [ChakraAttr(name="pg_name", string_val=pytorch_gpu_node.pg_name)] if pytorch_gpu_node.pg_name != "" else [] ),
+                                *(
+                                    [ChakraAttr(name="pg_name", string_val=pytorch_gpu_node.pg_name)]
+                                    if pytorch_gpu_node.pg_name != ""
+                                    else []
+                                ),
                             ]
                         )
 
@@ -369,13 +377,14 @@ class PyTorchConverter:
             "allgather": ALL_GATHER,
             "reducescatter": REDUCE_SCATTER,
             "broadcast": BROADCAST,
-            "sendrecv": GATHER,
             # Additional cases can be added here
         }
         normalized_name = name.replace("_", "").replace("-", "").lower()
         for key in comm_type_mapping:
             if key in normalized_name:
                 return comm_type_mapping[key]
+        if "ncclDevKernel_SendRecv" in name:
+            return comm_type_mapping["allgather"]
         raise ValueError(
             f"The name '{name}' does not correspond to a recognized collective communication type. "
             "The converter determines collective communication types based on the node name of a GPU operator. "

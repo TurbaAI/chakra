@@ -50,6 +50,19 @@ $ chakra_trace_link \
     --chakra-host-trace /path/to/chakra_host_trace \
     --chakra-device-trace /path/to/chakra_device_trace \
     --output-file /path/to/chakra_host_device_trace.json
+
+```
+
+### Execution Trace Batch Link (chakra_trace_link_batch)
+Batch version of `chakra_trace_link`. Provide input and output directories and whether to use compression, as well as "identifiers" (string fragments) which 
+identify host and device traces respectively.
+```bash
+$ chakra_trace_link_batch \
+    --input-directory /path/to/trace_files \
+    --output-directory /path/to/output \
+    --compression True \
+    --chakra-host-trace-identifier .et.trace.json \
+    --chakra-device-trace-identifier .pt.trace.json
 ```
 
 ### Execution Trace Converter (chakra_converter)
@@ -63,6 +76,21 @@ $ chakra_converter PyTorch \
 * --input: Path to the input file containing the merged Chakra host and device traces in JSON format.
 * --output: Path to the output file where the converted Chakra trace will be saved in protobuf format.
 * --simulate: (Optional) Enable simulation of operators after the conversion for validation and debugging purposes. This option allows simulation of traces without running them through a simulator. Users can validate the converter or simulator against actual measured values using tools like chrome://tracing or https://perfetto.dev/. Read the duration of the timeline and compare the total execution time against the final simulation time of a trace. Disabled by default because it takes a long time.
+
+### Execution Trace Converter (chakra_converter_batch)
+Converts the execution traces from `chakra_trace_link` into traces in the protobuf format. It is responsible for identifying and encoding dependencies for simulation as well. The converter is designed for any downstream simulators that take Chakra execution traces in the protobuf format. It takes an input file in another format and generates a Chakra execution trace output in the protobuf format.
+```bash
+$ chakra_converter_batch \
+    --input-directory /path/to/chakra_linked_traces \
+    --output-directory /path/to/output \
+    --linked-trace-identifier _linked.json.gz \
+    --compress True
+```
+* --input-directory: Path to the input files containing the merged Chakra host and device traces in JSON format.
+* --output-directory: Path to the output file where the converted Chakra traces will be saved in protobuf format.
+* --linked-trace-identifier: string identifier by which to identify linked traces (.e.g. `_linked.json.gz`)
+* --compress: Whether to compress the output chakra et file
+
 
 ### Execution Trace Feeder (et_feeder)
 The Execution Trace Feeder (et_feeder) is a C++ library designed to feed Chakra traces into any compatible C++ simulator. This library specifically provides dependency-free nodes to a simulator, which must import the feeder as a library. Currently, ASTRA-sim is the only simulator that supports this trace feeder. Below are the commands to run execution traces on ASTRA-sim:
@@ -100,6 +128,15 @@ Provides a readable JSON format of execution traces:
 $ chakra_jsonizer \
     --input_filename /path/to/chakra_et \
     --output_filename /path/to/output_json
+```
+
+### Execution Trace Protobufizer (chakra_protobufizer)
+Converts a JSON representation of a chakra ET back to protobuf:
+
+```bash
+$ chakra_protobufizer \
+    --input_filename /path/to/chakra_json \
+    --output_filename /path/to/output_et
 ```
 
 ### Timeline Visualizer (chakra_timeline_visualizer)

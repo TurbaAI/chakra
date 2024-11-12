@@ -69,13 +69,11 @@ class KinetoOperator:
         self.correlation: int = kineto_op.get("args", {}).get("correlation", -1)
         self.pg_name: Optional[str] = kineto_op.get("args", {}).get("Process Group Name", None)
 
-        self.op_is_cpu_op = False  # self.category in self.simulatable_categories and all(exc not in self.name for exc in self.name_exceptions)
-        self.op_is_cuda_runtime_op = False  # self.category == "cuda_runtime"
-        self.op_is_cuda_driver_op = False  # self.category == "cuda_driver"
-        self.op_is_ac2g_op = False  # self.category == "ac2g"
-        self.op_is_kernel_launch_op = (
-            False  # (self.is_cuda_runtime_op or self.is_cuda_driver_op) and self.name in self.cuda_launch_operations
-        )
+        self.op_is_cpu_op = False
+        self.op_is_cuda_runtime_op = False
+        self.op_is_cuda_driver_op = False
+        self.op_is_ac2g_op = False
+        self.op_is_kernel_launch_op = False
         self.op_is_gpu_op = False  # self.category in self.gpu_categories
         self.op_is_inter_gpu_comms_op = False  # "ncclDevKernel" in self.name
         self.get_op_type()
