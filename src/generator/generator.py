@@ -47,7 +47,7 @@ NODE_ID = 0
 
 def get_node(node_name: str, node_type: ChakraNodeType) -> ChakraNode:
     """Generate a new ChakraNode with a unique ID."""
-    global NODE_ID
+    global NODE_ID  # noqa: PLW0603
     node = ChakraNode()
     node.id = NODE_ID
     node.name = node_name

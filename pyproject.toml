@@ -11,7 +11,7 @@ license = {file = "LICENSE.md"}
 authors = [
     {name = "MLCommons", email = "chakra@mlcommons.org"},
 ]
-dependencies = ["protobuf==5.*", "graphviz", "networkx", "pydot", "tqdm", "orjson"]
+dependencies = ["protobuf==5.*", "graphviz", "networkx", "pydot", "tqdm", "orjson", "configargparse"]
 
 [project.urls]
 Homepage = "https://github.com/mlcommons/chakra"
@@ -53,7 +53,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["I", "B", "E", "D", "F", "SIM", "W", "C90", "EXE"]
+select = ["I", "B", "E", "D", "F", "SIM", "W", "C90", "EXE", "PLC", "PLE", "PLW"]
 ignore = [
     "D407", # Missing dashed underline after section
     "D203", # conflicts with D211

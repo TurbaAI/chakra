@@ -594,14 +594,13 @@ class PyTorchConverter:
             json_metadata (Dict): The metadata from the JSON trace.
             protobuf_node_map (Dict[int, ChakraNode]): The converted Chakra nodes.
         """
-        logging.debug(f"Opening Chakra execution trace file: {output_filename}")
+        logging.info("Writing Chakra execution trace: '%s'", output_filename)
         with (
             gzip.open(output_filename, "wb") if output_filename.endswith(".gz") else open(output_filename, "wb")
         ) as protobuf_et:
-            logging.debug("Writing Chakra execution trace.")
             self.write_global_metadata(protobuf_et, json_metadata)
             self.encode_and_write_nodes(protobuf_et, protobuf_node_map)
-            logging.debug("Chakra execution trace writing completed.")
+            logging.info("Chakra execution trace writing completed.")
 
     def write_global_metadata(
         self,

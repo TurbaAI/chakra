@@ -78,6 +78,7 @@ class TraceLinker:
         )
 
         self.dump_chakra_execution_trace_plus(chakra_execution_trace_plus_data, output_file)
+        logging.info("Traces linked successfully!")
 
     def enforce_inter_thread_order(
         self, kineto_tid_cpu_ops_map: Dict[int, List[KinetoOperator]], threshold: int = 1000
@@ -421,8 +422,8 @@ class TraceLinker:
                 gpu_op, kineto_correlation_cuda_runtime_map, sorted_kineto_cpu_ops, sorted_kineto_cpu_op_ts
             )
             if not parent_cpu_op:
-                warning_msg = f"Missing parent CPU operator for GPU op '{gpu_op.name}'. Orphaned GPU operator."
-                logging.warning(warning_msg)
+                # warning_msg = f"Missing parent CPU operator for GPU op '{gpu_op.name}'. Orphaned GPU operator."
+                # logging.warning(warning_msg)
                 continue
 
             if parent_cpu_op.ev_idx == "":
@@ -776,7 +777,7 @@ class TraceLinker:
             with gzip.open(file_path, "w") as f:
                 f.write(orjson.dumps(data))
         else:
-            with open(file_path, "w") as f:
+            with open(file_path, "wb") as f:
                 f.write(orjson.dumps(data))
 
     def dump_chakra_execution_trace_plus(self, chakra_execution_trace_plus_data: Dict, output_file: str) -> None:
@@ -787,7 +788,7 @@ class TraceLinker:
             chakra_execution_trace_plus_data (Dict): The constructed ET+ data.
             output_file (str): The file path where the ET+ data will be saved.
         """
-        logging.info(f"Starting to dump ET+ data to {output_file}.")
+        logging.info(f"Dumping ET+ data to {output_file}.")
 
         if chakra_execution_trace_plus_data is None:
             logging.error("ET+ data not constructed. Please run construct_et_plus_data first.")
