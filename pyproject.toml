@@ -18,6 +18,10 @@ Homepage = "https://github.com/mlcommons/chakra"
 Documentation = "https://github.com/mlcommons/chakra/README.md"
 Repository = "https://github.com/mlcommons/chakra.git"
 
+[tool.commitizen]
+version = "0.1.0"
+bump_message = "bump: version $current_version → $new_version [skip ci]"
+
 [tool.setuptools.package-dir]
 "chakra.schema.protobuf" = "schema/protobuf"
 "chakra.src.converter" = "src/converter"

@@ -1,0 +1,74 @@
+name: TurbaAI chakra container workflow
+
+on: [push]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/turba_chakra_container
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    name: "TurbaAI bump job"
+    outputs:
+      old_version: ${{ steps.get_latest_tag.outputs.tag }}
+      new_version: ${{ steps.cz.outputs.version }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/fh_perf_cleanup'
+    steps:
+      - uses: actions/create-github-app-token@v1
+        name: Obtain token from Turba Bump App
+        id: app-token
+        with:
+          app-id: ${{ vars.TURBA_BUMP_APP_ID }}
+          private-key: ${{ secrets.TURBA_BUMP_PRIVATE_KEY }}
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: "${{ steps.app-token.outputs.token }}"
+      - name: Get Latest tag
+        id: get_latest_tag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        with:
+          fallback: 0.1.0 # Optional fallback tag to use when no tag can be found
+      - id: cz
+        name: Bump version and generate changelog
+        uses: commitizen-tools/commitizen-action@0.21.0
+        with:
+          git_name: 'TurbaAI-Version-Bump[bot]'
+          git_email: '180653845+turbaai-version-bump[bot]@users.noreply.github.com"'
+          github_token: ${{ steps.app-token.outputs.token }}
+  build_docker_container:
+    needs: [ bump_version ]
+    if: ${{ needs.bump_version.outputs.new_version != needs.bump_version.outputs.old_version}}
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern=v{{major}}.{{minor}}.{{patch}},value=${{ needs.bump_version.outputs.new_version}}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ needs.bump_version.outputs.new_version}}
+            type=semver,pattern=v{{major}},value=${{ needs.bump_version.outputs.new_version}}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            TURBA_VERSION=${{ needs.bump_version.outputs.new_version}}
