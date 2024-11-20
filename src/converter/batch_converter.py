@@ -1,4 +1,4 @@
-import argparse
+import configargparse as argparse
 import logging
 import sys
 from collections import namedtuple
@@ -101,12 +101,14 @@ def main() -> None:
     parser.add_argument(
         "--input-directory",
         type=str,
+        env_var="INPUT_DIRECTORY",
         required=True,
         help="Input directory with Chakra host + device traces in the JSON format",
     )
     parser.add_argument(
         "--output-directory",
         type=str,
+        env_var="OUTPUT_DIRECTORY",
         required=True,
         help="Output directory with Chakra host + device traces in the protobuf format",
     )

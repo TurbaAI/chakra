@@ -35,6 +35,16 @@ $ git checkout 7b19f586dd8b267333114992833a0d7e0d601630
 $ pip install .
 ```
 
+### Step 4: (optional) Install Rust Extensions
+Installing rust extensions significantly speeds up trace linking
+
+```bash
+$ apt-get install cargo
+$ cd rust/
+$ pip install maturin
+$ pip install .
+```
+
 ### Step 4: Uninstalling Chakra
 To uninstall Chakra, use the following command within the virtual environment.
 
@@ -60,7 +70,8 @@ identify host and device traces respectively.
 $ chakra_trace_link_batch \
     --input-directory /path/to/trace_files \
     --output-directory /path/to/output \
-    --compression True \
+    --compress \
+    --convert \
     --chakra-host-trace-identifier .et.trace.json \
     --chakra-device-trace-identifier .pt.trace.json
 ```

@@ -1,17 +1,29 @@
-import argparse
+import configargparse as argparse
 import logging
+import os
 import sys
 from collections import namedtuple
 from pathlib import Path
 
+from ..converter.pytorch_converter import PyTorchConverter
 from .trace_linker import TraceLinker
 
-LinkerArgs = namedtuple("LinkerArgs", ["host_trace_file", "device_trace_file", "output_trace_file_name"])
+ToolArgs = namedtuple("ToolArgs", [
+    "trace_name",
+    "host_trace_file_path",
+    "device_trace_file_path",
+    "linked_trace_file_path",
+    "converted_trace_file_path"])
+
+LINKED_TRACE_EXT = "_linked.json"
+LINKED_TRACE_EXT_COMPRESSED = "_linked.json.gz"
+CONVERTED_TRACE_EXT = ".et"
+CONVERTED_TRACE_EXT_COMPRESSED = ".et.gz"
 
 
 def setup_logging(log_filename: str) -> None:
     """Set up logging to file and stream handlers."""
-    formatter = logging.Formatter("%(levelname)s [%(asctime)s] %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p")
+    formatter = logging.Formatter("[%(asctime)s][%(levelname)s] %(message)s", datefmt="%m/%d/%Y %H:%M:%S")
     handlers = []
     level: int = logging.INFO
 
@@ -27,42 +39,50 @@ def setup_logging(log_filename: str) -> None:
     stream_handler.setFormatter(formatter)
     handlers.append(stream_handler)
 
-    logging.basicConfig(level=level, handlers=handlers)
+    logging.basicConfig(level=level, handlers=handlers, force=True)
 
 
-def find_linker_args(
-    input_directory: str, host_trace_identifier: str, device_trace_identifier: str, compress: bool
-) -> list[LinkerArgs]:
+def find_tool_args(
+        input_directory: str,
+        output_directory: str,
+        host_trace_identifier: str,
+        device_trace_identifier: str,
+        compress: bool
+) -> list[ToolArgs]:
     input_path = Path(input_directory)
-    linked_trace_extension = "_linked.json.gz" if compress else "linked.json"
-    output_linker_args = []
-    host_traces: list[Path] = []
-    device_traces: list[Path] = []
+    linked_trace_extension = LINKED_TRACE_EXT_COMPRESSED if compress else LINKED_TRACE_EXT
+    converted_trace_extension = CONVERTED_TRACE_EXT_COMPRESSED if compress else CONVERTED_TRACE_EXT
+    tool_args: list[ToolArgs] = []
+    host_trace_paths: list[Path] = []
+    device_trace_paths: list[Path] = []
     for item in input_path.iterdir():
         if item.is_dir():
             continue
         if host_trace_identifier in item.name:
-            host_traces.append(item)
+            host_trace_paths.append(item)
         elif device_trace_identifier in item.name:
-            device_traces.append(item)
-    for host_trace in sorted(host_traces):
-        matching_device_trace = ""
-        for i in range(1, len(host_trace.name)):
-            matching_device_traces = [trace for trace in device_traces if host_trace.name[0:i] in trace.name]
-            if len(matching_device_traces) == 1:
-                matching_device_trace = matching_device_traces[0]
+            device_trace_paths.append(item)
+    for host_trace_path in sorted(host_trace_paths):
+        found_device_trace_path: Path = Path()
+        for i in range(1, len(host_trace_path.name)):
+            candidate_device_trace_paths = [trace_path for trace_path in device_trace_paths if host_trace_path.name[0:i] in trace_path.name]
+            if len(candidate_device_trace_paths) == 1:
+                found_device_trace_path = candidate_device_trace_paths[0]
                 break
-        if not matching_device_trace:
-            logging.error(f"Could not find matching device trace for host trace '{host_trace.name}'!")
+        if not found_device_trace_path:
+            logging.error(f"Could not find matching device trace for host trace '{host_trace_path.name}'!")
         else:
-            output_linker_args.append(
-                LinkerArgs(
-                    host_trace_file=host_trace.as_posix(),
-                    device_trace_file=matching_device_trace.as_posix(),
-                    output_trace_file_name=host_trace.name.split(host_trace_identifier)[0] + linked_trace_extension,
+            trace_name = os.path.commonprefix([host_trace_path.name, found_device_trace_path.name])
+            tool_args.append(
+                ToolArgs(
+                    trace_name = trace_name,
+                    host_trace_file_path=host_trace_path,
+                    device_trace_file_path=found_device_trace_path,
+                    linked_trace_file_path=Path(output_directory, trace_name + linked_trace_extension),
+                    converted_trace_file_path=Path(output_directory, trace_name + converted_trace_extension),
                 )
             )
-    return output_linker_args
+    return tool_args
 
 
 def main() -> None:
@@ -82,13 +102,14 @@ def main() -> None:
     parser.add_argument(
         "--input-directory",
         type=str,
+        env_var="INPUT_DIRECTORY",
         required=True,
         help="Directory containing Chakra host and device trace files",
     )
     parser.add_argument(
         "--chakra-host-trace-identifier",
         type=str,
-        required=True,
+        required=False,
         default=".et.trace.json",
         help=(
             "String fragment used to identify a chakra host trace. Can be a part of the filename or an extension. "
@@ -101,7 +122,7 @@ def main() -> None:
     parser.add_argument(
         "--chakra-device-trace-identifier",
         type=str,
-        required=True,
+        required=False,
         default=".pt.trace.json",
         help=(
             "String fragment used to identify a chakra device trace. Can be a part of the filename or an extension. "
@@ -113,31 +134,41 @@ def main() -> None:
     )
     parser.add_argument(
         "--output-directory",
+        env_var="OUTPUT_DIRECTORY",
         type=str,
         required=True,
         help="Path for the output Chakra host + device traces in the JSON format",
     )
 
     parser.add_argument(
-        "--compression",
-        type=bool,
-        default=True,
+        "--compress",
+        default=False,
+        action="store_true",
         required=False,
         help="Whether or not to use compression for the linked traces",
+    )
+    parser.add_argument(
+        "--convert",
+        default=False,
+        action="store_true",
+        required=False,
+        help="Whether or not to convert the linked traces equivalent to using chakra_converter"
+
     )
     parser.add_argument("--log-filename", type=str, default="", help="Debug Log filename")
 
     args = parser.parse_args()
 
     setup_logging(args.log_filename)
-
-    linker_args = find_linker_args(
+    logging.info(args)
+    tool_args: list[ToolArgs] = find_tool_args(
         input_directory=args.input_directory,
+        output_directory=args.output_directory,
         host_trace_identifier=args.chakra_host_trace_identifier,
         device_trace_identifier=args.chakra_device_trace_identifier,
-        compress=args.compression,
+        compress=args.compress,
     )
-    if not linker_args:
+    if not tool_args:
         logging.error(
             "No trace pairs found (input_dir: '%s', host_trace_identifier: '%s', device_trace_identifier: '%s')",
             args.input_directory,
@@ -147,21 +178,31 @@ def main() -> None:
         sys.exit(-1)
 
     Path(args.output_directory).mkdir(exist_ok=True, parents=True)
-    for idx, linker_arg in enumerate(linker_args):
-        output_file = Path(args.output_directory, linker_arg.output_trace_file_name).as_posix()
+    for idx, tool_arg in enumerate(tool_args):
         logging.info(
             "Linking file pair %d of %d: inputs: ('%s', '%s'), output: '%s'",
             idx + 1,
-            len(linker_args),
-            linker_arg.host_trace_file,
-            linker_arg.device_trace_file,
-            output_file,
+            len(tool_args),
+            tool_arg.host_trace_file_path.as_posix(),
+            tool_arg.device_trace_file_path.as_posix(),
+            tool_arg.linked_trace_file_path.as_posix(),
         )
         linker = TraceLinker()
-        linker.link(linker_arg.host_trace_file, linker_arg.device_trace_file, output_file)
+        linker.link(tool_arg.host_trace_file_path.as_posix(), tool_arg.device_trace_file_path.as_posix(), tool_arg.linked_trace_file_path.as_posix())
 
-    logging.info(f"Linking process successful. Output files are available at {args.output_directory}.")
-    logging.info("Please run the chakra_converter for further postprocessing.")
+    if args.convert:
+        for idx, tool_arg in enumerate(tool_args):
+            logging.info("Converting linked trace %d of %d: input: '%s', output: '%s'",
+                         idx + 1,
+                         len(tool_args),
+                         tool_arg.linked_trace_file_path.as_posix(),
+                         tool_arg.converted_trace_file_path.as_posix())
+            converter = PyTorchConverter()
+            converter.convert(tool_arg.linked_trace_file_path.as_posix(), tool_arg.converted_trace_file_path.as_posix(), simulate=False)
+        logging.info("Linking and conversion process successful. Output files are available at '%s'", args.output_directory)
+    else:
+        logging.info("Linking process successful. Output files are available at %s.", args.output_directory)
+        logging.info("Please run the chakra_converter for further postprocessing.")
 
 
 if __name__ == "__main__":
