@@ -13,7 +13,7 @@ jobs:
     outputs:
       old_version: ${{ steps.get_latest_tag.outputs.tag }}
       new_version: ${{ steps.cz.outputs.version }}
-    if: github.event_name == 'push' && github.ref == 'refs/heads/fh_perf_cleanup'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/create-github-app-token@v1
         name: Obtain token from Turba Bump App
