@@ -19,7 +19,7 @@ Documentation = "https://github.com/mlcommons/chakra/README.md"
 Repository = "https://github.com/mlcommons/chakra.git"
 
 [tool.commitizen]
-version = "0.1.0"
+version = "0.2.0"
 bump_message = "bump: version $current_version → $new_version [skip ci]"
 
 [tool.setuptools.package-dir]
