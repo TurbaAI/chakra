@@ -79,7 +79,7 @@ def find_tool_args(
         if not found_device_trace_path:
             logging.error(f"Could not find matching device trace for host trace '{host_trace_path.name}'!")
         else:
-            trace_name = os.path.commonprefix([host_trace_path.name, found_device_trace_path.name])
+            trace_name = os.path.commonprefix([host_trace_path.name, found_device_trace_path.name]).rstrip(".")
             tool_args.append(
                 ToolArgs(
                     trace_name=trace_name,
@@ -161,6 +161,13 @@ def main() -> None:
         required=False,
         help="Whether or not to convert the linked traces equivalent to using chakra_converter",
     )
+    parser.add_argument(
+        "--rank-offset",
+        default=0,
+        type=int,
+        required=False,
+        help="Offset applied to the ranks of the traces during linking"
+    )
     parser.add_argument("--log-filename", type=str, default="", help="Debug Log filename")
 
     args = parser.parse_args()
@@ -195,7 +202,7 @@ def main() -> None:
         )
         linker = TraceLinker()
         linker.link(
-            rank=idx,
+            rank=idx + args.rank_offset,
             chakra_host_trace=tool_arg.host_trace_file_path.as_posix(),
             chakra_device_trace=tool_arg.device_trace_file_path.as_posix(),
             output_file=tool_arg.linked_trace_file_path.as_posix(),

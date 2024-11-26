@@ -89,7 +89,8 @@ $ chakra_trace_link_batch \
     --compress \
     --convert \
     --chakra-host-trace-identifier .et.trace.json \
-    --chakra-device-trace-identifier .pt.trace.json
+    --chakra-device-trace-identifier .pt.trace.json \
+    --rank-offset 0
 ```
 * --input-directory: Path to the folder where input Chakra host traces and input Chakra device traces are located
 * --output-directory: Path to the output directory where the linked Chakra traces will be saved in JSON format.
@@ -97,6 +98,7 @@ $ chakra_trace_link_batch \
 * --convert: Whether to convert the linked Chakra traces to protobuf format after linking
 * --chakra-host-trace-identifier: File name contents by which Chakra host traces can be identified (e.g. `.et.trace.json`)
 * --chakra-device-trace-identifier: File name contents by which Chakra device traces can be identified (e.g. `.pt.trace.json`)
+* --rank-offset: Offset applied to rank values passed to HTA. Ranks start from 0 + rank-offset.
 
 ### Execution Trace Converter (chakra_converter)
 Converts the execution traces from `chakra_trace_link` into traces in the protobuf format. It is responsible for identifying and encoding dependencies for simulation as well. The converter is designed for any downstream simulators that take Chakra execution traces in the protobuf format. It takes an input file in another format and generates a Chakra execution trace output in the protobuf format.
