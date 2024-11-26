@@ -34,6 +34,7 @@ class ChakraDeviceTraceLoader:
     ) -> Tuple[
         List[KinetoOperator],
         Dict[int, List[KinetoOperator]],
+        Dict[int, List[KinetoOperator]],
         Dict[int, KinetoOperator],
         List[KinetoOperator],
         Dict[int, KinetoOperator],
@@ -44,6 +45,7 @@ class ChakraDeviceTraceLoader:
         Dict[int, KinetoOperator],
         List[KinetoOperator],
         List[int],
+        Dict[int, KinetoOperator],
     ]:
         """
         Load and process the Chakra device trace.
@@ -79,6 +81,7 @@ class ChakraDeviceTraceLoader:
         logging.debug("Chakra device trace has been loaded and processed successfully.")
         return (
             dev_data["kineto_cpu_ops"],
+            dev_data["kineto_tid_ops_map"],
             dev_data["kineto_tid_cpu_ops_map"],
             dev_data["kineto_correlation_cuda_runtime_map"],
             dev_data["kineto_gpu_ops"],
@@ -90,6 +93,7 @@ class ChakraDeviceTraceLoader:
             dev_data["kineto_rf_id_to_kineto_op_map"],
             dev_data["sorted_kineto_cpu_ops"],
             dev_data["sorted_kineto_cpu_op_ts"],
+            dev_data["kineto_external_id_to_kineto_op_map"],
         )
 
     def construct_dev_data_structures(self, kineto_ops: List[KinetoOperator], trace_file: str) -> Dict:
@@ -112,13 +116,17 @@ class ChakraDeviceTraceLoader:
         thread_info = {}
 
         kineto_cpu_ops = []
+        kineto_tid_ops_map = {}
         kineto_tid_cpu_ops_map = {}
         kineto_correlation_cuda_runtime_map = {}
         kineto_gpu_ops = []
         kineto_id_arrow_op_map = {}
         kineto_id_cuda_launch_op_map = {}
+        kineto_external_id_to_kineto_op_map = {}
 
         for op in kineto_ops:
+            kineto_tid_ops_map.setdefault(op.tid, []).append(op)
+
             if op.is_cpu_op():
                 kineto_cpu_ops.append(op)
                 kineto_tid_cpu_ops_map.setdefault(op.tid, []).append(op)
@@ -166,9 +174,13 @@ class ChakraDeviceTraceLoader:
                 thread_start_end[0] = min(thread_start_end[0], op.timestamp)
                 thread_start_end[1] = max(thread_start_end[1], op.timestamp + op.inclusive_dur)
 
+            if op.external_id is not None:
+                kineto_external_id_to_kineto_op_map[op.external_id] = op
+
         kineto_rf_id_to_kineto_op_map = {op.rf_id: op for op in kineto_cpu_ops if op.rf_id is not None}
         return {
             "kineto_cpu_ops": kineto_cpu_ops,
+            "kineto_tid_ops_map": kineto_tid_ops_map,
             "kineto_tid_cpu_ops_map": kineto_tid_cpu_ops_map,
             "kineto_correlation_cuda_runtime_map": kineto_correlation_cuda_runtime_map,
             "kineto_gpu_ops": kineto_gpu_ops,
@@ -180,6 +192,7 @@ class ChakraDeviceTraceLoader:
             "kineto_rf_id_to_kineto_op_map": kineto_rf_id_to_kineto_op_map,
             "sorted_kineto_cpu_ops": [],
             "sorted_kineto_cpu_op_ts": [],
+            "kineto_external_id_to_kineto_op_map": kineto_external_id_to_kineto_op_map,
         }
 
     def get_exclusive_dur_for_op(self, tid_op_index: tuple[int, int]) -> float:
