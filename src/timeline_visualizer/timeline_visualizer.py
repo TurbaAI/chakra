@@ -6,6 +6,8 @@ from enum import IntEnum
 from logging import FileHandler
 from typing import Any, Dict, List, Tuple
 
+from ..utils.file_io import open_file_read, open_file_write
+
 
 class TID(IntEnum):
     """
@@ -99,7 +101,7 @@ def get_trace_events(input_filename: str, num_npus: int, npu_frequency: int) -> 
     trace_dict = {i: {} for i in range(num_npus)}
     trace_events = []
 
-    with open(input_filename, "r") as f:
+    with open_file_read(input_filename, "r") as f:
         for line in f:
             if ("issue" in line) or ("callback" in line):
                 (trace_type, npu_id, curr_cycle, node_id, node_name) = parse_event(line)
@@ -135,17 +137,17 @@ def get_trace_events(input_filename: str, num_npus: int, npu_frequency: int) -> 
 
 def write_trace_events(output_filename: str, num_npus: int, trace_events: List[Dict[str, Any]]) -> None:
     output_dict = {"meta_user": "aras", "traceEvents": trace_events, "meta_cpu_count": num_npus}
-    with open(output_filename, "w") as f:
+    with open_file_write(output_filename, "w") as f:
         json.dump(output_dict, f)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Timeline Visualizer")
-    parser.add_argument("--input_filename", type=str, default=None, required=True, help="Input timeline filename")
-    parser.add_argument("--output_filename", type=str, default=None, required=True, help="Output trace filename")
-    parser.add_argument("--num_npus", type=int, default=None, required=True, help="Number of NPUs in a system")
-    parser.add_argument("--npu_frequency", type=int, default=None, required=True, help="NPU frequency in MHz")
-    parser.add_argument("--log_filename", type=str, default="debug.log", help="Log filename")
+    parser.add_argument("--input-filename", type=str, default=None, required=True, help="Input timeline filename")
+    parser.add_argument("--output-filename", type=str, default=None, required=True, help="Output trace filename")
+    parser.add_argument("--num-npus", type=int, default=None, required=True, help="Number of NPUs in a system")
+    parser.add_argument("--npu-frequency", type=int, default=None, required=True, help="NPU frequency in MHz")
+    parser.add_argument("--log-filename", type=str, default="debug.log", help="Log filename")
     args = parser.parse_args()
 
     logger = get_logger(args.log_filename)

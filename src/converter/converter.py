@@ -26,14 +26,14 @@ def setup_logging(log_filename: str) -> None:
 
 def convert_text(args: argparse.Namespace) -> None:
     """Convert text input trace to Chakra execution trace."""
-    converter = TextConverter(args.input, args.output, args.num_npus, args.num_passes)
+    converter = TextConverter(args.input_filename, args.output_filename, args.num_npus, args.num_passes)
     converter.convert()
 
 
 def convert_pytorch(args: argparse.Namespace) -> None:
     """Convert PyTorch input trace to Chakra execution trace."""
     converter = PyTorchConverter()
-    converter.convert(args.input, args.output, args.simulate)
+    converter.convert(args.input_filename, args.output_filename, args.simulate)
 
 
 def main() -> None:
@@ -56,10 +56,10 @@ def main() -> None:
         "Chakra schema with protobuf format",
     )
     pytorch_parser.add_argument(
-        "--input", type=str, required=True, help="Input Chakra host + device traces in the JSON format"
+        "--input-filename", type=str, required=True, help="Input Chakra host + device traces in the JSON format"
     )
     pytorch_parser.add_argument(
-        "--output", type=str, required=True, help="Output Chakra host + device traces in the protobuf format"
+        "--output-filename", type=str, required=True, help="Output Chakra host + device traces in the protobuf format"
     )
     pytorch_parser.add_argument(
         "--simulate",
@@ -78,7 +78,7 @@ def main() -> None:
         "Text", help="Convert text-based model description to Chakra schema-based traces in the protobuf format"
     )
     text_parser.add_argument(
-        "--input",
+        "--input-filename",
         type=str,
         required=True,
         help=(
@@ -87,7 +87,10 @@ def main() -> None:
         ),
     )
     text_parser.add_argument(
-        "--output", type=str, required=True, help="Output Chakra execution trace filename in the protobuf format"
+        "--output-filename",
+        type=str,
+        required=True,
+        help="Output Chakra execution trace filename in the protobuf format",
     )
     text_parser.add_argument(
         "--num-npus",

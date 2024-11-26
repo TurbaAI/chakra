@@ -41,6 +41,7 @@ from ...schema.protobuf.et_def_pb2 import (
     NodeType as ChakraNodeType,
 )
 from ..third_party.utils.protolib import encodeMessage as encode_message
+from ..utils.file_io import open_file_write
 
 NODE_ID = 0
 
@@ -65,7 +66,7 @@ def one_metadata_node_all_types(num_npus: int) -> None:
     """Generate metadata nodes with all types of attributes."""
     for npu_id in range(num_npus):
         output_filename = f"one_metadata_node_all_types.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("METADATA_NODE", METADATA_NODE)
@@ -114,7 +115,7 @@ def one_remote_mem_load_node(num_npus: int, tensor_size: int) -> None:
     """Generate remote memory load nodes."""
     for npu_id in range(num_npus):
         output_filename = f"one_remote_mem_load_node.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("MEM_LOAD_NODE", MEM_LOAD_NODE)
@@ -127,7 +128,7 @@ def one_remote_mem_store_node(num_npus: int, tensor_size: int) -> None:
     """Generate remote memory store nodes."""
     for npu_id in range(num_npus):
         output_filename = f"one_remote_mem_store_node.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("MEM_STORE_NODE", MEM_STORE_NODE)
@@ -140,7 +141,7 @@ def one_comp_node(num_npus: int, runtime: int) -> None:
     """Generate computation nodes with a given runtime."""
     for npu_id in range(num_npus):
         output_filename = f"one_comp_node.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("COMP_NODE", COMP_NODE)
@@ -153,7 +154,7 @@ def two_comp_nodes_independent(num_npus: int, runtime: int) -> None:
     """Generate two independent computation nodes."""
     for npu_id in range(num_npus):
         output_filename = f"two_comp_nodes_independent.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             for _ in range(2):
@@ -167,7 +168,7 @@ def two_comp_nodes_dependent(num_npus: int, runtime: int) -> None:
     """Generate two dependent computation nodes."""
     for npu_id in range(num_npus):
         output_filename = f"two_comp_nodes_dependent.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             parent_node = get_node("COMP_NODE", COMP_NODE)
@@ -186,7 +187,7 @@ def generate_comm_coll_node(num_npus: int, comm_size: int, comm_type: int, node_
     """Generate communication collective nodes."""
     for npu_id in range(num_npus):
         output_filename = f"{node_name}.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node(node_name, COMM_COLL_NODE)
@@ -229,7 +230,7 @@ def one_comm_send_node(num_npus: int, tensor_size: int) -> None:
     """Generate communication send nodes."""
     for npu_id in range(num_npus):
         output_filename = f"one_comm_send_node.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("COMM_SEND_NODE", COMM_SEND_NODE)
@@ -242,7 +243,7 @@ def one_comm_recv_node(num_npus: int, tensor_size: int) -> None:
     """Generate communication receive nodes."""
     for npu_id in range(num_npus):
         output_filename = f"one_comm_recv_node.{npu_id}.et"
-        with open(output_filename, "wb") as et:
+        with open_file_write(output_filename, "wb") as et:
             encode_message(et, GlobalMetadata(version="0.0.4"))
 
             node = get_node("COMM_RECV_NODE", COMM_RECV_NODE)
@@ -253,9 +254,9 @@ def one_comm_recv_node(num_npus: int, tensor_size: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Execution Trace Generator")
-    parser.add_argument("--num_npus", type=int, default=64, help="Number of NPUs")
-    parser.add_argument("--default_runtime", type=int, default=5, help="Default runtime of compute nodes")
-    parser.add_argument("--default_tensor_size", type=int, default=1024, help="Default tensor size of memory nodes")
+    parser.add_argument("--num-npus", type=int, default=64, help="Number of NPUs")
+    parser.add_argument("--default-runtime", type=int, default=5, help="Default runtime of compute nodes")
+    parser.add_argument("--default-tensor_size", type=int, default=1024, help="Default tensor size of memory nodes")
     parser.add_argument(
         "--default_comm_size", type=int, default=65536, help="Default communication size of communication nodes"
     )

@@ -1,8 +1,9 @@
-import configargparse as argparse
 import logging
 import sys
 from collections import namedtuple
 from pathlib import Path
+
+import configargparse as argparse
 
 from .pytorch_converter import PyTorchConverter
 
@@ -64,7 +65,7 @@ def convert_pytorch_batch(args: argparse.Namespace) -> None:
         input_dir=args.input_directory,
         output_dir=args.output_directory,
         linked_trace_identifier=args.linked_trace_identifier,
-        compression=args.compression,
+        compression=args.compress,
     )
     if not trace_pairs:
         logging.error(
@@ -78,8 +79,8 @@ def convert_pytorch_batch(args: argparse.Namespace) -> None:
         logging.info(
             "Converting file %d of %d: trace_name: '%s', input: '%s', output: '%s'",
             idx + 1,
-            trace_name,
             len(trace_pairs),
+            trace_name,
             file_pair.input_file,
             file_pair.output_file,
         )
@@ -120,9 +121,8 @@ def main() -> None:
         help="String fragment to identify linked chakra traces (default='_linked.trace.json')",
     )
     parser.add_argument(
-        "--compression",
-        type=bool,
-        default=True,
+        "--compress",
+        action="store_true",
         required=False,
         help="Whether or not to use compression for the linked traces",
     )

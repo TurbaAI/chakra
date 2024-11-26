@@ -73,13 +73,14 @@ def mock_chakra_node() -> ChakraNode:
     return node
 
 
-@patch("builtins.open", new_callable=mock_open)
-def test_load_json_execution_traces(mock_file: MagicMock, sample_pytorch_data: Dict) -> None:
+@patch("pathlib.Path.exists")
+@patch("pathlib.Path.open", new_callable=mock_open)
+def test_load_json_execution_traces(mock_file: MagicMock, mock_exists: MagicMock, sample_pytorch_data: Dict) -> None:
     mock_file.return_value.read.return_value = json.dumps(sample_pytorch_data)
     converter = PyTorchConverter()
     data = converter.load_json_execution_traces("input.json")
     assert data == sample_pytorch_data
-    mock_file.assert_called_once_with("input.json", "r")
+    mock_file.assert_called_once_with("rb")
 
 
 def test_parse_json_trace(sample_pytorch_data: Dict) -> None:
@@ -153,7 +154,7 @@ def test_convert_ctrl_dep_to_data_dep(sample_pytorch_data: Dict) -> None:
     assert root_node.data_deps == []
 
 
-@patch("builtins.open", new_callable=mock_open)
+@patch("pathlib.Path.open", new_callable=mock_open)
 def test_write_chakra_et(mock_file: MagicMock, sample_pytorch_data: Dict) -> None:
     converter = PyTorchConverter()
     json_metadata, json_node_map = converter.parse_json_trace(sample_pytorch_data)

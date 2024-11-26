@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-
+import gzip
 import logging
 from io import TextIOWrapper
 from typing import Any, List
 
+from ..utils.file_io import open_file_read, open_file_write
 from ...schema.protobuf.et_def_pb2 import (
     ALL_GATHER,
     ALL_REDUCE,
@@ -62,7 +63,7 @@ class TextConverter:
 
     def get_global_metadata(self):
         input_text = ""
-        with open(self.input_filename, "r") as input_file:
+        with open_file_read(self.input_filename, "r") as input_file:
             input_text = input_file.read()
         attr = [
             ChakraAttr(name="schema", string_val="1.0.2-chakra.0.0.4"),
@@ -111,7 +112,7 @@ class TextConverter:
         child_node.data_deps.append(parent_node.id)
 
     def convert(self) -> None:
-        with open(self.input_filename, "r") as f:
+        with open_file_read(self.input_filename, mode="r") as f:
             first_line = f.readline().strip().split()
             parallelism_type = first_line[0]
             num_layers = int(f.readline().strip())
@@ -136,7 +137,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):
@@ -150,7 +151,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):
@@ -198,7 +199,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):
@@ -251,7 +252,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):
@@ -310,7 +311,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):
@@ -369,7 +370,7 @@ class TextConverter:
         layers = self.get_layers(f, num_layers)
         for npu_id in range(self.num_npus):
             output_filename = "%s.%d.et" % (self.output_filename, npu_id)
-            with open(output_filename, "wb") as g:
+            with open_file_write(output_filename, "wb") as g:
                 global_metadata = self.get_global_metadata()
                 encode_message(g, global_metadata)
                 for i in range(self.num_passes):

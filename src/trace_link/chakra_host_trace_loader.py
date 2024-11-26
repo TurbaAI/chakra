@@ -1,4 +1,3 @@
-import gzip
 import logging
 import sys
 from typing import List
@@ -7,13 +6,15 @@ import orjson
 from et_replay.execution_trace import ExecutionTrace
 from et_replay.execution_trace import Node as PyTorchOperator
 
+from ..utils.file_io import open_file_read
+
 # Increase the recursion limit for deep Chakra host execution traces.
 sys.setrecursionlimit(10**6)
 
 
 def load_execution_trace_file(et_file_path: str) -> ExecutionTrace:
     """Load Execution Trace from json file and parses it."""
-    with gzip.open(et_file_path, "rb") if et_file_path.endswith("gz") else open(et_file_path, "r") as f:
+    with open_file_read(et_file_path, "rb") as f:
         return ExecutionTrace(orjson.loads(f.read()))
 
 

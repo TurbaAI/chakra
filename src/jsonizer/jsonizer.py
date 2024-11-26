@@ -1,5 +1,4 @@
 import argparse
-import gzip
 
 import orjson
 from google.protobuf.json_format import MessageToDict
@@ -13,15 +12,16 @@ from ...schema.protobuf.et_def_pb2 import (
 )
 from ..third_party.utils.protolib import decodeMessage as decode_message
 from ..third_party.utils.protolib import openFileRd as open_file_rd
+from ..utils.file_io import open_file_write
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Converts Chakra execution trace to JSON format.")
     parser.add_argument(
-        "--input_filename", type=str, required=True, help="Specifies the input filename of the Chakra execution trace."
+        "--input-filename", type=str, required=True, help="Specifies the input filename of the Chakra execution trace."
     )
     parser.add_argument(
-        "--output_filename", type=str, required=True, help="Specifies the output filename for the JSON data."
+        "--output-filename", type=str, required=True, help="Specifies the output filename for the JSON data."
     )
     args = parser.parse_args()
 
@@ -36,11 +36,7 @@ def main() -> None:
         trace_objects.append(MessageToDict(node))
         progress_bar.update(1)
     progress_bar.close()
-    with (
-        gzip.open(args.output_filename, "wb")
-        if args.output_filename.endswith(".gz")
-        else open(args.output_filename, "wb") as file
-    ):
+    with open_file_write(args.output_filename, "wb") as file:
         file.write(orjson.dumps(trace_objects, option=orjson.OPT_INDENT_2))
 
     execution_trace.close()

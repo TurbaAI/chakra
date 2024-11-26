@@ -31,6 +31,7 @@ bump_message = "bump: version $current_version → $new_version [skip ci]"
 "chakra.src.third_party" = "src/third_party"
 "chakra.src.timeline_visualizer" = "src/timeline_visualizer"
 "chakra.src.trace_link" = "src/trace_link"
+"chakra.src.utils" = "src/utils"
 "chakra.src.visualizer" = "src/visualizer"
 
 [tool.setuptools.package-data]

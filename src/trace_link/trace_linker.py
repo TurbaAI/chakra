@@ -1,6 +1,5 @@
 import bisect
 import copy
-import gzip
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
@@ -13,6 +12,7 @@ from et_replay.execution_trace import (
 from et_replay.execution_trace import Node as PyTorchOperator
 from et_replay.utils import read_dictionary_from_json_file
 
+from ..utils.file_io import open_file_write
 from .chakra_device_trace_loader import ChakraDeviceTraceLoader
 from .chakra_host_trace_loader import ChakraHostTraceLoader
 from .kineto_operator import KinetoOperator
@@ -773,12 +773,8 @@ class TraceLinker:
     @staticmethod
     def write_dictionary_to_json_file(file_path: str, data: Dict[Any, Any]) -> None:
         """Write input dictionary to a json file."""
-        if file_path.endswith("gz"):
-            with gzip.open(file_path, "w") as f:
-                f.write(orjson.dumps(data))
-        else:
-            with open(file_path, "wb") as f:
-                f.write(orjson.dumps(data))
+        with open_file_write(file_path, "wb") as f:
+            f.write(orjson.dumps(data))
 
     def dump_chakra_execution_trace_plus(self, chakra_execution_trace_plus_data: Dict, output_file: str) -> None:
         """

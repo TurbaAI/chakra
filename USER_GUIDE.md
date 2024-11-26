@@ -62,6 +62,9 @@ $ chakra_trace_link \
     --output-file /path/to/chakra_host_device_trace.json
 
 ```
+* --chakra-host-trace: Path to the input Chakra host trace in JSON format.
+* --chakra-device-trace: Path to the input Chakra device trace in JSON format.
+* --output-file: Path to the output file where the linked Chakra trace will be saved in JSON format.
 
 ### Execution Trace Batch Link (chakra_trace_link_batch)
 Batch version of `chakra_trace_link`. Provide input and output directories and whether to use compression, as well as "identifiers" (string fragments) which 
@@ -75,17 +78,23 @@ $ chakra_trace_link_batch \
     --chakra-host-trace-identifier .et.trace.json \
     --chakra-device-trace-identifier .pt.trace.json
 ```
+* --input-directory: Path to the folder where input Chakra host traces and input Chakra device traces are located
+* --output-directory: Path to the output directory where the linked Chakra traces will be saved in JSON format.
+* --compress: Whether to apply gzip compression to the output files
+* --convert: Whether to convert the linked Chakra traces to protobuf format after linking
+* --chakra-host-trace-identifier: File name contents by which Chakra host traces can be identified (e.g. `.et.trace.json`)
+* --chakra-device-trace-identifier: File name contents by which Chakra device traces can be identified (e.g. `.pt.trace.json`)
 
 ### Execution Trace Converter (chakra_converter)
 Converts the execution traces from `chakra_trace_link` into traces in the protobuf format. It is responsible for identifying and encoding dependencies for simulation as well. The converter is designed for any downstream simulators that take Chakra execution traces in the protobuf format. It takes an input file in another format and generates a Chakra execution trace output in the protobuf format.
 ```bash
 $ chakra_converter PyTorch \
-    --input /path/to/chakra_host_device_trace.json \
-    --output /path/to/chakra_trace \
+    --input-filename /path/to/chakra_host_device_trace.json \
+    --output-filename /path/to/chakra_trace \
     [--simulate] \
 ```
-* --input: Path to the input file containing the merged Chakra host and device traces in JSON format.
-* --output: Path to the output file where the converted Chakra trace will be saved in protobuf format.
+* --input-filename: Path to the input file containing the linked Chakra host and device traces in JSON format.
+* --output-filename: Path to the output file where the converted Chakra trace will be saved in protobuf format.
 * --simulate: (Optional) Enable simulation of operators after the conversion for validation and debugging purposes. This option allows simulation of traces without running them through a simulator. Users can validate the converter or simulator against actual measured values using tools like chrome://tracing or https://perfetto.dev/. Read the duration of the timeline and compare the total execution time against the final simulation time of a trace. Disabled by default because it takes a long time.
 
 ### Execution Trace Converter (chakra_converter_batch)
@@ -95,12 +104,12 @@ $ chakra_converter_batch \
     --input-directory /path/to/chakra_linked_traces \
     --output-directory /path/to/output \
     --linked-trace-identifier _linked.json.gz \
-    --compress True
+    --compress
 ```
 * --input-directory: Path to the input files containing the merged Chakra host and device traces in JSON format.
 * --output-directory: Path to the output file where the converted Chakra traces will be saved in protobuf format.
 * --linked-trace-identifier: string identifier by which to identify linked traces (.e.g. `_linked.json.gz`)
-* --compress: Whether to compress the output chakra et file
+* --compress: Whether to compress the output chakra protobuf file using gzip.
 
 
 ### Execution Trace Feeder (et_feeder)
@@ -128,8 +137,8 @@ This tool visualizes execution traces in various formats. Here is an example com
 
 ```bash
 $ chakra_visualizer \
-    --input_filename /path/to/chakra_et
-    --output_filename /path/to/output.[graphml|pdf|dot]
+    --input-filename /path/to/chakra_et \
+    --output-filename /path/to/output.[graphml|pdf|dot]
 ```
 
 ### Execution Trace Jsonizer (chakra_jsonizer)
@@ -137,9 +146,11 @@ Provides a readable JSON format of execution traces:
 
 ```bash
 $ chakra_jsonizer \
-    --input_filename /path/to/chakra_et \
-    --output_filename /path/to/output_json
+    --input-filename /path/to/chakra_et \
+    --output-filename /path/to/output_json
 ```
+* --input-filename: Path to the input file containing the Chakra trace in protobuf format.
+* --output-filename: Path to the output file where the Chakra trace will be saved in JSON format.
 
 ### Execution Trace Protobufizer (chakra_protobufizer)
 Converts a JSON representation of a chakra ET back to protobuf:
@@ -149,6 +160,8 @@ $ chakra_protobufizer \
     --input_filename /path/to/chakra_json \
     --output_filename /path/to/output_et
 ```
+* --input-filename: Path to the input file containing the Chakra trace in JSON format.
+* --output-filename: Path to the output file where the Chakra trace will be saved in protobuf format.
 
 ### Timeline Visualizer (chakra_timeline_visualizer)
 Visualizes the execution timeline of traces. This tool serves as a reference implementation for visualizing the simulation of Chakra traces. After simulating Chakra traces, you can visualize the timeline of operator executions. Update the simulator to present when operators are issued and completed. Below is the format needed:
@@ -161,11 +174,15 @@ callback,<dummy_str>=npu_id,<dummy_str>=curr_cycle,<dummy_str>=node_id,<dummy_st
 You can visualize the timeline with the command below.
 ```bash
 $ chakra_timeline_visualizer \
-    --input_filename /path/to/input.csv \
-    --output_filename /path/to/output.json \
-    --num_npus 4 \
-    --npu_frequency 1.5GHz
+    --input-filename /path/to/input.csv \
+    --output-filename /path/to/output.json \
+    --num-npus 4 \
+    --npu-frequency 1.5GHz
 ```
 
 When you open the output file with `chrome://tracing`, you will see an execution timeline like the one below.
 ![](doc/timeline_visualizer.png)
+
+### Compression
+
+All commands dealing with single files can handle compressed files (indicated by the `.gz` extension) automatically for both input and output. For the batch versions of converter and linker, compressed files on the input are handled automatically. For output compression, make sure to pass the `--compress` parameter.

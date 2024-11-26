@@ -1,10 +1,11 @@
-import gzip
 import logging
 import sys
 from typing import Any, Dict, List, Tuple
 
 import orjson
 from tqdm.contrib.concurrent import process_map
+
+from ..utils.file_io import open_file_read
 
 try:
     from rusty_chakra import DurationCalculator, RSKinetoOperator
@@ -18,7 +19,7 @@ from .kineto_operator import KinetoOperator
 
 def read_dictionary_from_json_file(et_file_path: str) -> Dict[str, Any]:
     """Load Execution Trace from json file."""
-    with gzip.open(et_file_path, "rb") if et_file_path.endswith("gz") else open(et_file_path, "r") as f:
+    with open_file_read(et_file_path, "rb") as f:
         return orjson.loads(f.read())
 
 

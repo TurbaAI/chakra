@@ -11,7 +11,7 @@ from google.protobuf.json_format import MessageToDict
 
 @patch("chakra.src.jsonizer.jsonizer.open_file_rd")
 @patch("chakra.src.jsonizer.jsonizer.decode_message")
-@patch("builtins.open", new_callable=mock_open)
+@patch("pathlib.Path.open", new_callable=mock_open)
 def test_main(mock_file_open, mock_decode_message, mock_open_file_rd) -> None:
     """
     Tests the main function for converting Chakra execution trace to JSON format.
@@ -31,6 +31,5 @@ def test_main(mock_file_open, mock_decode_message, mock_open_file_rd) -> None:
 
         mock_open_file_rd.assert_called_with("input_file")
         mock_decode_message.assert_called()
-        mock_file_open.assert_called_with(temp_output.name, "wb")
+        mock_file_open.assert_called_with("wb")
         mock_file_open().write.assert_any_call(mock_json_data)
-        # mock_file_open().write.assert_any_call(MessageToJson(mock_node))

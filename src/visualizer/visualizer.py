@@ -28,9 +28,9 @@ def escape_label(label: str) -> str:
 def main() -> None:
     """Generate an output graph file in the specified format (PDF, DOT, or GraphML)."""
     parser = argparse.ArgumentParser(description="Execution Trace Visualizer")
-    parser.add_argument("--input_filename", type=str, required=True, help="Input Chakra execution trace filename")
+    parser.add_argument("--input-filename", type=str, required=True, help="Input Chakra execution trace filename")
     parser.add_argument(
-        "--output_filename",
+        "--output-filename",
         type=str,
         required=True,
         help=(
