@@ -60,7 +60,7 @@ def find_tool_args(
     tool_args: list[ToolArgs] = []
     host_trace_paths: list[Path] = []
     device_trace_paths: list[Path] = []
-    for item in input_path.iterdir():
+    for item in sorted(input_path.iterdir()):
         if item.is_dir():
             continue
         if host_trace_identifier in item.name:
@@ -195,9 +195,10 @@ def main() -> None:
         )
         linker = TraceLinker()
         linker.link(
-            tool_arg.host_trace_file_path.as_posix(),
-            tool_arg.device_trace_file_path.as_posix(),
-            tool_arg.linked_trace_file_path.as_posix(),
+            rank=idx,
+            chakra_host_trace=tool_arg.host_trace_file_path.as_posix(),
+            chakra_device_trace=tool_arg.device_trace_file_path.as_posix(),
+            output_file=tool_arg.linked_trace_file_path.as_posix(),
         )
 
     if args.convert:

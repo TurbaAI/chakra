@@ -120,10 +120,14 @@ class TraceLinker:
         sync_dependencies = {}
         absolute_kineto_file = os.path.abspath(kineto_file)
         trace_dir = os.path.dirname(absolute_kineto_file)
-        trace_analysis = TraceAnalysis(trace_dir=trace_dir, trace_files={rank: kineto_file})
-        cp_graph, success = trace_analysis.critical_path_analysis(
-            rank=rank, annotation=annotation, instance_id=instance_id
-        )
+        kineto_file_name = os.path.split(kineto_file)[-1]
+
+        trace_analysis = TraceAnalysis(trace_dir=trace_dir, trace_files={rank: kineto_file_name})
+        result = trace_analysis.critical_path_analysis(rank=rank, annotation=annotation, instance_id=instance_id)
+        if not result:
+            cp_graph, success = None, False
+        else:
+            cp_graph, success = result
         if not success:
             logging.error("Failed to load Critical Path Graph")
             return sync_dependencies
