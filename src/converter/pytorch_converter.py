@@ -322,6 +322,8 @@ class PyTorchConverter:
                 ChakraAttr(name="fw_tid", int64_val=json_node.fw_tid),
                 ChakraAttr(name="op_schema", string_val=json_node.op_schema),
                 ChakraAttr(name="is_cpu_op", bool_val=not json_node.is_gpu_op()),
+                ChakraAttr(name="flops", float_val=json_node.flops),
+                ChakraAttr(name="GFLOPs/sec", float_val=json_node.gflops_per_sec),
             ]
         )
         if json_node.stream is not None:
